@@ -44,54 +44,66 @@ bool Player::Start() {
 
 bool Player::Update(float dt)
 {
-	b2Vec2 vel = b2Vec2(0, -GRAVITY_Y);
+    b2Vec2 vel = pbody->body->GetLinearVelocity();
 
-	if (app->input->GetKey(SDL_SCANCODE_W) == KEY_REPEAT) {
-		//
-	}
-	if (app->input->GetKey(SDL_SCANCODE_S) == KEY_REPEAT) {
-		//
-	}
+    if (app->input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT) {
+        vel.x = -speed;
+        isMoving = true;
+    }
+    else if (app->input->GetKey(SDL_SCANCODE_D) == KEY_REPEAT) {
+        vel.x = speed;
+        isMoving = true;
+    }
+    else {
+        vel.x = 0;
+        isMoving = false;
+    }
 
-	if (app->input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT) {
-		vel = b2Vec2(-speed*dt, -GRAVITY_Y);
-	}
+    if (app->input->GetKey(SDL_SCANCODE_W) == KEY_DOWN && isTouchingGround) {
+        vel.y = jumpImpulse;
+        isTouchingGround = false;
+    }
 
-	if (app->input->GetKey(SDL_SCANCODE_D) == KEY_REPEAT) {
-		vel = b2Vec2(speed*dt, -GRAVITY_Y);
-	}
+    if (app->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN && canDash && isMoving) {
+        vel.x *= dashMultiplier;
+        canDash = false;
+    }
 
-	//Set the velocity of the pbody of the player
-	pbody->body->SetLinearVelocity(vel);
+    pbody->body->SetLinearVelocity(vel);
 
-	//Update player position in pixels
-	position.x = METERS_TO_PIXELS(pbody->body->GetTransform().p.x) - 16;
-	position.y = METERS_TO_PIXELS(pbody->body->GetTransform().p.y) - 16;
+    position.x = METERS_TO_PIXELS(pbody->body->GetPosition().x) - 16;
+    position.y = METERS_TO_PIXELS(pbody->body->GetPosition().y) - 16;
 
-	app->render->DrawTexture(texture, position.x, position.y);
+    app->render->DrawTexture(texture, position.x, position.y);
 
-	return true;
+    if (vel.y > 0)
+        isTouchingGround = false;
+
+    return true;
 }
+
 
 bool Player::CleanUp()
 {
 
-	return true;
+    return true;
 }
 
 void Player::OnCollision(PhysBody* physA, PhysBody* physB) {
 
-	switch (physB->ctype)
-	{
-	case ColliderType::ITEM:
-		LOG("Collision ITEM");
-		app->audio->PlayFx(pickCoinFxId);
-		break;
-	case ColliderType::PLATFORM:
-		LOG("Collision PLATFORM");
-		break;
-	case ColliderType::UNKNOWN:
-		LOG("Collision UNKNOWN");
-		break;
-	}
+    switch (physB->ctype)
+    {
+    case ColliderType::ITEM:
+        LOG("Collision ITEM");
+        app->audio->PlayFx(pickCoinFxId);
+        break;
+    case ColliderType::PLATFORM:
+        LOG("Collision PLATFORM");
+        isTouchingGround = true;
+        canDash = true;
+        break;
+    case ColliderType::UNKNOWN:
+        LOG("Collision UNKNOWN");
+        break;
+    }
 }

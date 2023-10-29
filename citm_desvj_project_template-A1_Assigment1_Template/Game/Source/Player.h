@@ -31,6 +31,11 @@ public:
 	SDL_Texture* texture = NULL;
 	PhysBody* pbody;
 	int pickCoinFxId;
+	bool isTouchingGround = false;
+	bool canDash = true;
+	float jumpImpulse = 10.0f;
+	float dashMultiplier = 2.0f;
+	bool isMoving = false;
 };
 
 #endif // __PLAYER_H__
